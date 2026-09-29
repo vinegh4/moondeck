@@ -2,9 +2,10 @@ name: Build
 
 on:
   push:
-    branches: ['main']
+    branches: ['main', 'armada']
+    tags: ['v*']
   pull_request:
-    branches: ['main']
+    branches: ['main', 'armada']
   workflow_dispatch:
 
 jobs:
@@ -145,3 +146,22 @@ jobs:
           files: |
             ./artifacts/moondeck/moondeck.zip
             ./artifacts/moondeck-cli-*/*
+
+  tag-release:
+    name: Tagged release
+    needs: [build-plugin]
+    runs-on: ubuntu-latest
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    permissions:
+      contents: write
+    steps:
+      - name: Download plugin artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: moondeck
+          path: artifacts
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./artifacts/moondeck.zip
